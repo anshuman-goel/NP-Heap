@@ -22,7 +22,10 @@
 //
 ////////////////////////////////////////////////////////////////////////
 //
-//   Author:  Hung-Wei Tseng
+//   Author:  
+//		Anshuman Goel		agoel5
+//		Bhushan Thakur		bsthakur
+//		Zubin Thampi		zsthampi
 //
 //   Description:
 //     Skeleton of NPHeap Pseudo Device
