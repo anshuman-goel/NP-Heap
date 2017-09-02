@@ -50,6 +50,11 @@ extern struct miscdevice npheap_dev;
 
 int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 {
+	// Allocating Kernel Memory
+	void* kernel_memory = kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
+	//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
+	remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
+	printk(KERN_ERR "Size %d\n", vma->vm_end - vma->vm_start);
     return 0;
 }
 
