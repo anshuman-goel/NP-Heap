@@ -1,3 +1,6 @@
+benchmark/benchmark
+benchmark/validate
+library/libnpheap.so.1.0
 kernel_module/modules.order
 kernel_module/Module.symvers
 kernel_module/.tmp_versions/*
