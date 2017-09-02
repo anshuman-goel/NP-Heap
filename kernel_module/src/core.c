@@ -52,17 +52,22 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 {
 	// Allocating Kernel Memory
 	void* kernel_memory = kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
+
 	//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
 	//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
 	// Ref: https://sites.google.com/site/lbathen/research/mmap_driver
-	if (remap_pfn_range(vma,
-			    vma->vm_start,
-			    virt_to_phys((void *)kernel_memory) >> PAGE_SIZE,
-			    ksize(kernel_memory),
-			    vma->vm_page_prot) < 0) {
+	if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SIZE, ksize(kernel_memory), vma->vm_page_prot) < 0)
+	{
 		printk(KERN_ERR "remap_pfn_range failed\n");
 		return -EIO;
 	}
+
+	//Copying the contents from user memory space to kernel memory space
+	if (copy_from_user(kernel_memory, vma->vm_start, vma->vm_end - vma->vm_start) != 0)
+	{
+		printk(KERN_ERR "Cannot copy content from user memory to kernel memory space\n");
+	}
+
 	printk(KERN_ERR "Size %d\n", ksize(kernel_memory));
     return 0;
 }
