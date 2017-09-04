@@ -1,3 +1,4 @@
+sudo rmmod npheap
 cd kernel_module
 make
 sudo make install

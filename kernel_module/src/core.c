@@ -24,7 +24,7 @@
 //
 //   Author:  
 //		Anshuman Goel		agoel5
-//		Bhushan Thakur		bsthakur
+//		Bhushan Thakur		bvthakur
 //		Zubin Thampi		zsthampi
 //
 //   Description:
@@ -48,8 +48,28 @@
 
 extern struct miscdevice npheap_dev;
 
+struct linklist
+{
+	unsigned long offset;
+	void* kernel_addr;
+	struct linklist *next;
+} *head=NULL;
+
 int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 {
+	struct linklist *iter;
+	iter = head;
+	printk(KERN_ERR "LOOP Starting");
+	if(head != NULL)
+	{
+		while (iter->next != NULL)
+		{
+			printk(KERN_ERR "i AM IN LOOP");
+			if(iter->offset == vma->vm_pgoff<<PAGE_SHIFT)
+				return iter->kernel_addr;
+			iter = iter->next;
+		}
+	}
 	// Allocating Kernel Memory
 	void* kernel_memory = kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
 
@@ -67,9 +87,24 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 	{
 		printk(KERN_ERR "Cannot copy content from user memory to kernel memory space\n");
 	}
+	
+	struct linklist *temp;
+	temp = kmalloc(sizeof(struct linklist), GFP_KERNEL);
+	temp->offset = vma->vm_pgoff<<PAGE_SHIFT;
+	temp->kernel_addr = kernel_memory;
+	temp->next = NULL;
+	if(head == NULL)
+	{
+		head = temp;
+	}
+	else
+	{
 
+		iter->next = temp;
+	}
 	printk(KERN_ERR "Size %d\n", ksize(kernel_memory));
-    return 0;
+	printk(KERN_ERR "%p",temp->kernel_addr);
+	return 0;
 }
 
 int npheap_init(void)
