@@ -48,11 +48,14 @@
 
 extern struct miscdevice npheap_dev;
 
+struct mutex *global_lock;
+
 struct linklist
 {
 	unsigned long offset;
 	void* kernel_addr;
 	struct linklist *next;
+	struct mutex *lock;
 } *head=NULL;
 
 int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
@@ -63,51 +66,59 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 	//printk(KERN_ERR "Page size%lu\n", getpagesize());
 	if(head != NULL)
 	{
+
 		while (iter->next != NULL)
 		{
 			//printk(KERN_ERR "Offset %lu, VMA offset %lu\n", iter->offset, vma->vm_pgoff);
 			if(iter->offset == vma->vm_pgoff)
 				{
 					printk(KERN_ERR "i AM IN IF");
+					if(iter->kernel_addr == NULL)
+					{
+						// Allocating Kernel Memory
+						void* kernel_memory = kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
+
+						//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
+						//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
+						// Ref: https://sites.google.com/site/lbathen/research/mmap_driver
+						if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SIZE, ksize(kernel_memory), vma->vm_page_prot) < 0)
+						{
+							printk(KERN_ERR "remap_pfn_range failed\n");
+							return -EIO;
+						}
+
+						//Copying the contents from user memory space to kernel memory space
+						if (copy_from_user(kernel_memory, vma->vm_start, vma->vm_end - vma->vm_start) != 0)
+						{
+							printk(KERN_ERR "Cannot copy content from user memory to kernel memory space\n");
+						}
+						iter->kernel_addr = kernel_memory;
+						printk(KERN_ERR "Size %d\n", ksize(kernel_memory));
+						return 0;
+					}
 					remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SIZE, ksize(iter->kernel_addr), vma->vm_page_prot);
+					printk(KERN_ERR "Size %d\n", ksize(iter->kernel_addr));
 					return 0;
 				}
 			iter = iter->next;
 		}
 	}
-	// Allocating Kernel Memory
-	void* kernel_memory = kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
 
-	//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
-	//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
-	// Ref: https://sites.google.com/site/lbathen/research/mmap_driver
-	if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SIZE, ksize(kernel_memory), vma->vm_page_prot) < 0)
-	{
-		printk(KERN_ERR "remap_pfn_range failed\n");
-		return -EIO;
-	}
+	// struct linklist *temp;
+	// temp = kmalloc(sizeof(struct linklist), GFP_KERNEL);
+	// temp->offset = vma->vm_pgoff;
+	// temp->kernel_addr = kernel_memory;
+	// temp->next = NULL;
+	// if(head == NULL)
+	// {
+	// 	head = temp;
+	// }
+	// else
+	// {
+	//
+	// 	iter->next = temp;
+	// }
 
-	//Copying the contents from user memory space to kernel memory space
-	if (copy_from_user(kernel_memory, vma->vm_start, vma->vm_end - vma->vm_start) != 0)
-	{
-		printk(KERN_ERR "Cannot copy content from user memory to kernel memory space\n");
-	}
-
-	struct linklist *temp;
-	temp = kmalloc(sizeof(struct linklist), GFP_KERNEL);
-	temp->offset = vma->vm_pgoff;
-	temp->kernel_addr = kernel_memory;
-	temp->next = NULL;
-	if(head == NULL)
-	{
-		head = temp;
-	}
-	else
-	{
-
-		iter->next = temp;
-	}
-	printk(KERN_ERR "Size %d\n", ksize(kernel_memory));
 	//printk(KERN_ERR "%p",temp->kernel_addr);
 	return 0;
 }
@@ -118,7 +129,10 @@ int npheap_init(void)
     if ((ret = misc_register(&npheap_dev)))
         printk(KERN_ERR "Unable to register \"npheap\" misc device\n");
     else
-        printk(KERN_ERR "\"npheap\" misc device installed\n");
+        {
+					printk(KERN_ERR "\"npheap\" misc device installed\n");
+					mutex_init(global_lock);
+				}
     return ret;
 }
 

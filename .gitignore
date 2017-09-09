@@ -8,3 +8,4 @@ kernel_module/.tmp_versions/*
 *.mod.c
 *.o
 *.cmd
+*.log

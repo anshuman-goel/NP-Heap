@@ -42,24 +42,101 @@
 #include <linux/moduleparam.h>
 #include <linux/poll.h>
 #include <linux/mutex.h>
+//#include "core.c"
+
+extern struct mutex *global_lock;
+
+extern struct linklist
+{
+	unsigned long offset;
+	void* kernel_addr;
+	struct linklist *next;
+	struct mutex *lock;
+} *head;
 
 // If exist, return the data.
 long npheap_lock(struct npheap_cmd __user *user_cmd)
 {
-    return 0;
-}     
+    // Check if offset doesn't exist in link linklist.
+    struct linklist *iter = head;
+    int flag=0;
+    // Acquire global lock
+    mutex_lock(global_lock);
+    //Do something
+    if (iter!=NULL)
+  {
+    while(iter->next!=NULL) //!iter
+    {
+      if(iter->offset == user_cmd->offset)
+      {
+        flag = 1;
+        break;
+      }
+      iter = iter -> next;
+    }
+  }
+    // create new structure linklist and add it
+    if(!flag)
+    {
+      struct linklist *temp;
+    	temp = kmalloc(sizeof(struct linklist), GFP_KERNEL);
+    	temp->offset = user_cmd->offset;
+    	temp->next = NULL;
+			temp->kernel_addr = NULL;
+      mutex_init(temp->lock);
+    	if(head == NULL)
+    	{
+    		head = temp;
+    	}
+    	else
+    	{
+
+    		iter->next = temp;
+    	}
+      iter = temp;
+    }
+    mutex_unlock(global_lock);
+
+    // acquire lock on the offset on linklist
+    mutex_lock(iter->lock);
+    user_cmd->op = 0;
+    return user_cmd->data;
+}
 
 long npheap_unlock(struct npheap_cmd __user *user_cmd)
 {
+  struct linklist *iter = head;
+  while(iter->next!=NULL)
+  {
+    if(iter->offset == user_cmd->offset)
+    {
+      mutex_unlock(iter->lock);
+      user_cmd->op = 1;
+      break;
+    }
+    iter = iter -> next;
+  }
     return 0;
 }
 
 long npheap_getsize(struct npheap_cmd __user *user_cmd)
 {
-    return 0;
+    return user_cmd->size;
 }
 long npheap_delete(struct npheap_cmd __user *user_cmd)
 {
+	struct linklist *iter = head;
+	while(iter->next!=NULL)
+	{
+		if(iter->offset == user_cmd->offset)
+		{
+			// Free the kernel memory and retain the linklist
+			kfree(iter->kernel_addr);
+			iter->kernel_addr=NULL;
+			break;
+		}
+		iter = iter -> next;
+	}
     return 0;
 }
 
