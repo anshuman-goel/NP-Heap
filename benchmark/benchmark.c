@@ -12,9 +12,9 @@
 
 int main(int argc, char *argv[])
 {
-    int i=0,number_of_processes = 1, number_of_objects=1024, number_of_transactions = 65536,j; 
+    int i=0,number_of_processes = 1, number_of_objects=1024, number_of_transactions = 65536,j;
     int a;
-    int pid;
+    int pid=-77;
     int size;
     char data[8192];
     char filename[256];
@@ -42,13 +42,16 @@ int main(int argc, char *argv[])
     for(i=0;i<(number_of_processes-1) && pid != 0;i++)
     {
         pid=fork();
+        printf("%d\n", pid);
     }
+    printf("Creating file\n");
     sprintf(filename,"npheap.%d.log",pid);
     fp = fopen(filename,"w");
     for(i = 0; i < number_of_objects; i++)
     {
+        //printf("%d\n", i);
         npheap_lock(devfd,i);
-        do 
+        do
         {
             size = rand()%(8192);
         }
@@ -56,6 +59,7 @@ int main(int argc, char *argv[])
         mapped_data = (char *)npheap_alloc(devfd,i,size);
         if(!mapped_data)
         {
+            printf("Failed in allocation\n");
             fprintf(stderr,"Failed in npheap_alloc()\n");
             exit(1);
         }
@@ -69,7 +73,7 @@ int main(int argc, char *argv[])
         fprintf(fp,"S\t%d\t%ld\t%d\t%lu\t%s\n",pid,current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
         npheap_unlock(devfd,i);
     }
-/*    
+/*
     // try delete something
     i = rand()%256;
     npheap_lock(devfd,i);
@@ -81,4 +85,3 @@ int main(int argc, char *argv[])
         wait(NULL);
     return 0;
 }
-

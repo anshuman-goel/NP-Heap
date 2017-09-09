@@ -22,7 +22,7 @@
 //
 ////////////////////////////////////////////////////////////////////////
 //
-//   Author:  
+//   Author:
 //		Anshuman Goel		agoel5
 //		Bhushan Thakur		bvthakur
 //		Zubin Thampi		zsthampi
@@ -59,14 +59,19 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 {
 	struct linklist *iter;
 	iter = head;
-	printk(KERN_ERR "LOOP Starting");
+	printk(KERN_ERR "VMA Offset %lu\n", vma->vm_pgoff);
+	//printk(KERN_ERR "Page size%lu\n", getpagesize());
 	if(head != NULL)
 	{
 		while (iter->next != NULL)
 		{
-			printk(KERN_ERR "i AM IN LOOP");
-			if(iter->offset == vma->vm_pgoff<<PAGE_SHIFT)
-				return iter->kernel_addr;
+			//printk(KERN_ERR "Offset %lu, VMA offset %lu\n", iter->offset, vma->vm_pgoff);
+			if(iter->offset == vma->vm_pgoff)
+				{
+					printk(KERN_ERR "i AM IN IF");
+					remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SIZE, ksize(iter->kernel_addr), vma->vm_page_prot);
+					return 0;
+				}
 			iter = iter->next;
 		}
 	}
@@ -87,10 +92,10 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 	{
 		printk(KERN_ERR "Cannot copy content from user memory to kernel memory space\n");
 	}
-	
+
 	struct linklist *temp;
 	temp = kmalloc(sizeof(struct linklist), GFP_KERNEL);
-	temp->offset = vma->vm_pgoff<<PAGE_SHIFT;
+	temp->offset = vma->vm_pgoff;
 	temp->kernel_addr = kernel_memory;
 	temp->next = NULL;
 	if(head == NULL)
@@ -103,7 +108,7 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 		iter->next = temp;
 	}
 	printk(KERN_ERR "Size %d\n", ksize(kernel_memory));
-	printk(KERN_ERR "%p",temp->kernel_addr);
+	//printk(KERN_ERR "%p",temp->kernel_addr);
 	return 0;
 }
 
@@ -121,4 +126,3 @@ void npheap_exit(void)
 {
     misc_deregister(&npheap_dev);
 }
-
