@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     fp = fopen(filename,"w");
     for(i = 0; i < number_of_objects; i++)
     {
-        //printf("%d\n", i);
+        printf("%d\n", i);
         npheap_lock(devfd,i);
         do
         {
@@ -59,7 +59,6 @@ int main(int argc, char *argv[])
         mapped_data = (char *)npheap_alloc(devfd,i,size);
         if(!mapped_data)
         {
-            printf("Failed in allocation\n");
             fprintf(stderr,"Failed in npheap_alloc()\n");
             exit(1);
         }

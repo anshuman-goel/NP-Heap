@@ -86,8 +86,12 @@ long npheap_lock(struct npheap_cmd __user *user_cmd)
       }
       iter = iter -> next;
     }
+		if(iter->next==NULL && iter->offset == user_cmd->offset)
+		{
+			flag = 1;
+		}
   }
-	printk(KERN_ERR "Finished iterating\n");
+	printk(KERN_ERR "Finished iterating with flag %d\n", flag);
 
     // create new structure linklist and add it
     if(!flag)
@@ -111,20 +115,31 @@ long npheap_lock(struct npheap_cmd __user *user_cmd)
 
 			printk(KERN_ERR "CReated node\n");
     }
-
+printk(KERN_ERR "REleasing global lock");
     mutex_unlock(&global_lock);
 
     // acquire lock on the offset on linklist
+		printk(KERN_ERR "Acquiring local lock\n");
     mutex_lock(&(iter->lock));
     user_cmd->op = 0;
 
 		printk(KERN_ERR "Head %p\n", head);
-    return user_cmd->data;
+		if(iter->kernel_addr!=NULL)
+		{
+			if (copy_to_user(user_cmd->data, iter->kernel_addr, ksize(iter->kernel_addr)) != 0)
+			{
+				printk(KERN_ERR "Cannot copy content from kernel memory to user memory space\n");
+			}
+			user_cmd->data = iter->kernel_addr;
+		}
+		//user_cmd->data = iter->kernel_addr;
+    return 0;
 }
 
 long npheap_unlock(struct npheap_cmd __user *user_cmd)
 {
   struct linklist *iter = head;
+	int flag=0;
 	if(iter!=NULL)
   {
 		while(iter->next!=NULL)
@@ -133,10 +148,16 @@ long npheap_unlock(struct npheap_cmd __user *user_cmd)
     {
       mutex_unlock(&(iter->lock));
       user_cmd->op = 1;
+			flag=1;
       break;
     }
     iter = iter -> next;
   }
+	if(iter->offset == user_cmd->offset && !flag)
+	{
+		mutex_unlock(&(iter->lock));
+		user_cmd->op = 1;
+	}
 }
     return 0;
 }

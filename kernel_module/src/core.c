@@ -63,15 +63,15 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 	struct linklist *iter;
 	iter = head;
 	//printk(KERN_ERR "Core Head %p\n", head);
-	printk(KERN_ERR "VMA Offset %lu\n", vma->vm_pgoff);
+	printk(KERN_ERR "VMA Offset %lu\n", vma->vm_pgoff*PAGE_SIZE);
 	if(head != NULL)
 	{
 printk(KERN_ERR "i AM IN IF");
 
 		while (iter->next !=NULL)
 		{
-			printk(KERN_ERR "Offset %lu, VMA offset %lu\n", iter->offset, vma->vm_pgoff);
-			if(iter->offset*PAGE_SIZE == vma->vm_pgoff)
+			printk(KERN_ERR "Offset %lu, VMA offset %lu\n", iter->offset, vma->vm_pgoff*PAGE_SIZE);
+			if(iter->offset == vma->vm_pgoff*PAGE_SIZE)
 				{
 					printk(KERN_ERR "i AM IN IF while");
 					if(iter->kernel_addr == NULL)
@@ -110,7 +110,7 @@ printk(KERN_ERR "i AM IN IF");
 		{
 			if(iter->offset == vma->vm_pgoff*PAGE_SIZE)
 				{
-					printk(KERN_ERR "i AM IN IF while");
+					printk(KERN_ERR "i AM IN IF while\n");
 					if(iter->kernel_addr == NULL)
 					{
 						printk(KERN_ERR "Allocated Memory\n");
