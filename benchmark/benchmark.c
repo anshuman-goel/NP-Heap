@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         printf("%d\n", pid);
     }
     printf("Creating file\n");
-    sprintf(filename,"npheap.%d.log",pid);
+    sprintf(filename,"npheap.%d.log",getpid());
     fp = fopen(filename,"w");
     for(i = 0; i < number_of_objects; i++)
     {
