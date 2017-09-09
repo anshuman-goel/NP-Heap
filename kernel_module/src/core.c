@@ -48,36 +48,38 @@
 
 extern struct miscdevice npheap_dev;
 
-struct mutex *global_lock;
+//extern struct mutex *global_lock;
 
-struct linklist
+extern struct linklist
 {
 	unsigned long offset;
 	void* kernel_addr;
 	struct linklist *next;
-	struct mutex *lock;
-} *head=NULL;
+	struct mutex lock;
+} *head;
 
 int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 {
 	struct linklist *iter;
 	iter = head;
+	//printk(KERN_ERR "Core Head %p\n", head);
 	printk(KERN_ERR "VMA Offset %lu\n", vma->vm_pgoff);
-	//printk(KERN_ERR "Page size%lu\n", getpagesize());
 	if(head != NULL)
 	{
+printk(KERN_ERR "i AM IN IF");
 
-		while (iter->next != NULL)
+		while (iter->next !=NULL)
 		{
-			//printk(KERN_ERR "Offset %lu, VMA offset %lu\n", iter->offset, vma->vm_pgoff);
-			if(iter->offset == vma->vm_pgoff)
+			printk(KERN_ERR "Offset %lu, VMA offset %lu\n", iter->offset, vma->vm_pgoff);
+			if(iter->offset*PAGE_SIZE == vma->vm_pgoff)
 				{
-					printk(KERN_ERR "i AM IN IF");
+					printk(KERN_ERR "i AM IN IF while");
 					if(iter->kernel_addr == NULL)
 					{
+						printk(KERN_ERR "Allocated Memory\n");
 						// Allocating Kernel Memory
 						void* kernel_memory = kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
-
+						printk(KERN_ERR "Memory Allocated\n");
 						//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
 						//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
 						// Ref: https://sites.google.com/site/lbathen/research/mmap_driver
@@ -86,40 +88,62 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 							printk(KERN_ERR "remap_pfn_range failed\n");
 							return -EIO;
 						}
-
+						printk(KERN_ERR "Memory Mapped");
 						//Copying the contents from user memory space to kernel memory space
 						if (copy_from_user(kernel_memory, vma->vm_start, vma->vm_end - vma->vm_start) != 0)
 						{
 							printk(KERN_ERR "Cannot copy content from user memory to kernel memory space\n");
 						}
+						printk(KERN_ERR "Contents copied");
 						iter->kernel_addr = kernel_memory;
 						printk(KERN_ERR "Size %d\n", ksize(kernel_memory));
 						return 0;
 					}
+					printk(KERN_ERR "Find mapping");
 					remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SIZE, ksize(iter->kernel_addr), vma->vm_page_prot);
 					printk(KERN_ERR "Size %d\n", ksize(iter->kernel_addr));
 					return 0;
 				}
 			iter = iter->next;
 		}
+		if(iter->next == NULL)
+		{
+			if(iter->offset == vma->vm_pgoff*PAGE_SIZE)
+				{
+					printk(KERN_ERR "i AM IN IF while");
+					if(iter->kernel_addr == NULL)
+					{
+						printk(KERN_ERR "Allocated Memory\n");
+						// Allocating Kernel Memory
+						void* kernel_memory = kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
+						printk(KERN_ERR "Memory Allocated\n");
+						//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
+						//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
+						// Ref: https://sites.google.com/site/lbathen/research/mmap_driver
+						if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SIZE, ksize(kernel_memory), vma->vm_page_prot) < 0)
+						{
+							printk(KERN_ERR "remap_pfn_range failed\n");
+							return -EIO;
+						}
+						printk(KERN_ERR "Memory Mapped\n");
+						//Copying the contents from user memory space to kernel memory space
+						if (copy_from_user(kernel_memory, vma->vm_start, vma->vm_end - vma->vm_start) != 0)
+						{
+							printk(KERN_ERR "Cannot copy content from user memory to kernel memory space\n");
+						}
+						printk(KERN_ERR "Contents copied\n");
+						iter->kernel_addr = kernel_memory;
+						printk(KERN_ERR "Size %d\n", ksize(kernel_memory));
+						return 0;
+					}
+					printk(KERN_ERR "Find mapping\n");
+					remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SIZE, ksize(iter->kernel_addr), vma->vm_page_prot);
+					printk(KERN_ERR "Size %d\n", ksize(iter->kernel_addr));
+					return 0;
+				}
+		}
 	}
-
-	// struct linklist *temp;
-	// temp = kmalloc(sizeof(struct linklist), GFP_KERNEL);
-	// temp->offset = vma->vm_pgoff;
-	// temp->kernel_addr = kernel_memory;
-	// temp->next = NULL;
-	// if(head == NULL)
-	// {
-	// 	head = temp;
-	// }
-	// else
-	// {
-	//
-	// 	iter->next = temp;
-	// }
-
-	//printk(KERN_ERR "%p",temp->kernel_addr);
+	printk(KERN_ERR "Returning without doing anyting");
 	return 0;
 }
 
@@ -130,8 +154,8 @@ int npheap_init(void)
         printk(KERN_ERR "Unable to register \"npheap\" misc device\n");
     else
         {
+					//mutex_init(global_lock);
 					printk(KERN_ERR "\"npheap\" misc device installed\n");
-					mutex_init(global_lock);
 				}
     return ret;
 }

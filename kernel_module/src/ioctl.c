@@ -42,29 +42,41 @@
 #include <linux/moduleparam.h>
 #include <linux/poll.h>
 #include <linux/mutex.h>
+//#include <unistd.h>
 //#include "core.c"
 
-extern struct mutex *global_lock;
+struct mutex global_lock;
 
-extern struct linklist
+struct linklist
 {
 	unsigned long offset;
 	void* kernel_addr;
 	struct linklist *next;
-	struct mutex *lock;
-} *head;
+	struct mutex lock;
+} *head=NULL;
 
 // If exist, return the data.
 long npheap_lock(struct npheap_cmd __user *user_cmd)
 {
     // Check if offset doesn't exist in link linklist.
-    struct linklist *iter = head;
-    int flag=0;
+    struct linklist *iter;
+		int flag=0;
+		iter = head;
+		if(head==NULL)
+			{
+				printk(KERN_ERR "Head %p\n", head);
+
+				//global_lock =(struct mutex *) kmalloc(sizeof(struct mutex), GFP_KERNEL);
+				mutex_init(&global_lock);
+				printk(KERN_ERR "Acquiring global lock\n");
+			}
     // Acquire global lock
-    mutex_lock(global_lock);
-    //Do something
+    mutex_lock(&global_lock);
+		printk(KERN_ERR "Start IF\n");
+		printk(KERN_ERR "USER OFFSET %lu\n", user_cmd->offset);
     if (iter!=NULL)
   {
+		printk(KERN_ERR "Start ieration \n");
     while(iter->next!=NULL) //!iter
     {
       if(iter->offset == user_cmd->offset)
@@ -75,6 +87,8 @@ long npheap_lock(struct npheap_cmd __user *user_cmd)
       iter = iter -> next;
     }
   }
+	printk(KERN_ERR "Finished iterating\n");
+
     // create new structure linklist and add it
     if(!flag)
     {
@@ -83,7 +97,7 @@ long npheap_lock(struct npheap_cmd __user *user_cmd)
     	temp->offset = user_cmd->offset;
     	temp->next = NULL;
 			temp->kernel_addr = NULL;
-      mutex_init(temp->lock);
+      mutex_init(&(temp->lock));
     	if(head == NULL)
     	{
     		head = temp;
@@ -94,28 +108,36 @@ long npheap_lock(struct npheap_cmd __user *user_cmd)
     		iter->next = temp;
     	}
       iter = temp;
+
+			printk(KERN_ERR "CReated node\n");
     }
-    mutex_unlock(global_lock);
+
+    mutex_unlock(&global_lock);
 
     // acquire lock on the offset on linklist
-    mutex_lock(iter->lock);
+    mutex_lock(&(iter->lock));
     user_cmd->op = 0;
+
+		printk(KERN_ERR "Head %p\n", head);
     return user_cmd->data;
 }
 
 long npheap_unlock(struct npheap_cmd __user *user_cmd)
 {
   struct linklist *iter = head;
-  while(iter->next!=NULL)
+	if(iter!=NULL)
+  {
+		while(iter->next!=NULL)
   {
     if(iter->offset == user_cmd->offset)
     {
-      mutex_unlock(iter->lock);
+      mutex_unlock(&(iter->lock));
       user_cmd->op = 1;
       break;
     }
     iter = iter -> next;
   }
+}
     return 0;
 }
 
@@ -126,7 +148,9 @@ long npheap_getsize(struct npheap_cmd __user *user_cmd)
 long npheap_delete(struct npheap_cmd __user *user_cmd)
 {
 	struct linklist *iter = head;
-	while(iter->next!=NULL)
+	if (iter!=NULL)
+	{
+		while(iter->next!=NULL)
 	{
 		if(iter->offset == user_cmd->offset)
 		{
@@ -137,6 +161,7 @@ long npheap_delete(struct npheap_cmd __user *user_cmd)
 		}
 		iter = iter -> next;
 	}
+}
     return 0;
 }
 
