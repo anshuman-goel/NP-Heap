@@ -49,13 +49,13 @@ int main(int argc, char *argv[])
     fp = fopen(filename,"w");
     for(i = 0; i < number_of_objects; i++)
     {
-        printf("%d\n", i);
         npheap_lock(devfd,i);
         do
         {
             size = rand()%(8192);
         }
         while(size ==0);
+        printf("Process %d of object %d has size %d\n", getpid(), i, size);
         mapped_data = (char *)npheap_alloc(devfd,i,size);
         if(!mapped_data)
         {
@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
         }
 //        memset(mapped_data, 0, 4096);
         a = rand()+1;
+        printf("Process %d of object %d has value of a %d", getpid(), i, a);
         gettimeofday(&current_time, NULL);
         for(j = 0; j < size-10; j=strlen(mapped_data))
         {

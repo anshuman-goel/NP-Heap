@@ -45,8 +45,6 @@
 #include <linux/moduleparam.h>
 #include <linux/poll.h>
 #include <linux/mutex.h>
-//#include <unistd.h>
-//#include "core.c"
 
 struct mutex global_lock;
 
