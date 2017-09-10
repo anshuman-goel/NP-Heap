@@ -23,9 +23,9 @@
 ////////////////////////////////////////////////////////////////////////
 //
 //   Author:
-//		Anshuman Goel		agoel5
+//		Anshuman Goel			agoel5
 //		Bhushan Thakur		bvthakur
-//		Zubin Thampi		zsthampi
+//		Zubin Thampi			zsthampi
 //
 //   Description:
 //     Skeleton of NPHeap Pseudo Device
@@ -83,7 +83,7 @@ printk(KERN_ERR "i AM IN IF");
 						//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
 						//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
 						// Ref: https://sites.google.com/site/lbathen/research/mmap_driver
-						if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SIZE, ksize(kernel_memory), vma->vm_page_prot) < 0)
+						if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SHIFT, ksize(kernel_memory), vma->vm_page_prot) < 0)
 						{
 							printk(KERN_ERR "remap_pfn_range failed\n");
 							return -EIO;
@@ -99,8 +99,8 @@ printk(KERN_ERR "i AM IN IF");
 						printk(KERN_ERR "Size %d\n", ksize(kernel_memory));
 						return 0;
 					}
-					printk(KERN_ERR "Find mapping");
-					remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SIZE, ksize(iter->kernel_addr), vma->vm_page_prot);
+					printk(KERN_ERR "Find mapping of size %lu\n", ksize(iter->kernel_addr));
+					remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SHIFT, ksize(iter->kernel_addr), vma->vm_page_prot);
 					printk(KERN_ERR "Size %d\n", ksize(iter->kernel_addr));
 					return 0;
 				}
@@ -108,6 +108,7 @@ printk(KERN_ERR "i AM IN IF");
 		}
 		if(iter->next == NULL)
 		{
+			printk(KERN_ERR "Offset %lu, VMA offset %lu\n", iter->offset, vma->vm_pgoff*PAGE_SIZE);
 			if(iter->offset == vma->vm_pgoff*PAGE_SIZE)
 				{
 					printk(KERN_ERR "i AM IN IF while\n");
@@ -120,7 +121,7 @@ printk(KERN_ERR "i AM IN IF");
 						//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
 						//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
 						// Ref: https://sites.google.com/site/lbathen/research/mmap_driver
-						if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SIZE, ksize(kernel_memory), vma->vm_page_prot) < 0)
+						if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SHIFT, ksize(kernel_memory), vma->vm_page_prot) < 0)
 						{
 							printk(KERN_ERR "remap_pfn_range failed\n");
 							return -EIO;
@@ -136,8 +137,8 @@ printk(KERN_ERR "i AM IN IF");
 						printk(KERN_ERR "Size %d\n", ksize(kernel_memory));
 						return 0;
 					}
-					printk(KERN_ERR "Find mapping\n");
-					remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SIZE, ksize(iter->kernel_addr), vma->vm_page_prot);
+					printk(KERN_ERR "Find mapping of size %lu\n", ksize(iter->kernel_addr));
+					remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SHIFT, ksize(iter->kernel_addr), vma->vm_page_prot);
 					printk(KERN_ERR "Size %d\n", ksize(iter->kernel_addr));
 					return 0;
 				}

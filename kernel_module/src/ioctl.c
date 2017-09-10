@@ -22,7 +22,10 @@
 //
 ////////////////////////////////////////////////////////////////////////
 //
-//   Author:  Hung-Wei Tseng
+//   Author:
+//		Anshuman Goel			agoel5
+//		Bhushan Thakur		bvthakur
+//		Zubin Thampi			zsthampi
 //
 //   Description:
 //     Skeleton of NPHeap Pseudo Device
@@ -126,10 +129,10 @@ printk(KERN_ERR "REleasing global lock");
 		printk(KERN_ERR "Head %p\n", head);
 		if(iter->kernel_addr!=NULL)
 		{
-			if (copy_to_user(user_cmd->data, iter->kernel_addr, ksize(iter->kernel_addr)) != 0)
-			{
-				printk(KERN_ERR "Cannot copy content from kernel memory to user memory space\n");
-			}
+			// if (copy_to_user(user_cmd->data, iter->kernel_addr, ksize(iter->kernel_addr)) != 0)
+			// {
+			// 	printk(KERN_ERR "Cannot copy content from kernel memory to user memory space\n");
+			// }
 			user_cmd->data = iter->kernel_addr;
 		}
 		//user_cmd->data = iter->kernel_addr;
