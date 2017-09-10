@@ -50,156 +50,159 @@ struct mutex global_lock;
 
 struct linklist
 {
-	unsigned long offset;
-	void* kernel_addr;
-	struct linklist *next;
-	struct mutex lock;
+								unsigned long offset;
+								void* kernel_addr;
+								struct linklist *next;
+								struct mutex lock;
 } *head=NULL;
 
 // If exist, return the data.
 long npheap_lock(struct npheap_cmd __user *user_cmd)
 {
-    // Check if offset doesn't exist in link linklist.
-    struct linklist *iter;
-		int flag=0;
-		iter = head;
-		if(head==NULL)
-			{
-				printk(KERN_ERR "Head %p\n", head);
+								// Check if offset doesn't exist in link linklist.
+								struct linklist *iter;
+								int flag=0;
+								iter = head;
+								if(head==NULL)
+								{
+																printk(KERN_ERR "Head %p\n", head);
 
-				//global_lock =(struct mutex *) kmalloc(sizeof(struct mutex), GFP_KERNEL);
-				mutex_init(&global_lock);
-				printk(KERN_ERR "Acquiring global lock\n");
-			}
-    // Acquire global lock
-    mutex_lock(&global_lock);
-		printk(KERN_ERR "Start IF\n");
-		printk(KERN_ERR "USER OFFSET %lu\n", user_cmd->offset);
-    if (iter!=NULL)
-  {
-		printk(KERN_ERR "Start ieration \n");
-    while(iter->next!=NULL) //!iter
-    {
-      if(iter->offset == user_cmd->offset)
-      {
-        flag = 1;
-        break;
-      }
-      iter = iter -> next;
-    }
-		if(iter->next==NULL && iter->offset == user_cmd->offset)
-		{
-			flag = 1;
-		}
-  }
-	printk(KERN_ERR "Finished iterating with flag %d\n", flag);
+																//global_lock =(struct mutex *) kmalloc(sizeof(struct mutex), GFP_KERNEL);
+																mutex_init(&global_lock);
+																printk(KERN_ERR "Acquiring global lock\n");
+								}
+								// Acquire global lock
+								mutex_lock(&global_lock);
+								printk(KERN_ERR "Start IF\n");
+								printk(KERN_ERR "USER OFFSET %lu\n", user_cmd->offset);
+								if (iter!=NULL)
+								{
+																printk(KERN_ERR "Start ieration \n");
+																while(iter->next!=NULL) //!iter
+																{
+																								if(iter->offset == user_cmd->offset)
+																								{
+																																flag = 1;
+																																break;
+																								}
+																								iter = iter->next;
+																}
+																if(iter->next==NULL && iter->offset == user_cmd->offset)
+																{
+																								flag = 1;
+																}
+								}
+								printk(KERN_ERR "Finished iterating with flag %d\n", flag);
 
-    // create new structure linklist and add it
-    if(!flag)
-    {
-      struct linklist *temp;
-    	temp = kmalloc(sizeof(struct linklist), GFP_KERNEL);
-    	temp->offset = user_cmd->offset;
-    	temp->next = NULL;
-			temp->kernel_addr = NULL;
-      mutex_init(&(temp->lock));
-    	if(head == NULL)
-    	{
-    		head = temp;
-    	}
-    	else
-    	{
+								// create new structure linklist and add it
+								if(!flag)
+								{
+																struct linklist *temp;
+																temp = kmalloc(sizeof(struct linklist), GFP_KERNEL);
+																temp->offset = user_cmd->offset;
+																temp->next = NULL;
+																temp->kernel_addr = NULL;
+																mutex_init(&(temp->lock));
+																if(head == NULL)
+																{
+																								head = temp;
+																}
+																else
+																{
 
-    		iter->next = temp;
-    	}
-      iter = temp;
+																								iter->next = temp;
+																}
+																iter = temp;
 
-			printk(KERN_ERR "CReated node\n");
-    }
-printk(KERN_ERR "REleasing global lock");
-    mutex_unlock(&global_lock);
+																printk(KERN_ERR "CReated node\n");
+								}
+								printk(KERN_ERR "REleasing global lock");
+								mutex_unlock(&global_lock);
 
-    // acquire lock on the offset on linklist
-		printk(KERN_ERR "Acquiring local lock\n");
-    mutex_lock(&(iter->lock));
-    user_cmd->op = 0;
+								// acquire lock on the offset on linklist
+								printk(KERN_ERR "Acquiring local lock\n");
+								mutex_lock(&(iter->lock));
+								user_cmd->op = 0;
 
-		printk(KERN_ERR "Head %p\n", head);
-		if(iter->kernel_addr!=NULL)
-		{
-			// if (copy_to_user(user_cmd->data, iter->kernel_addr, ksize(iter->kernel_addr)) != 0)
-			// {
-			// 	printk(KERN_ERR "Cannot copy content from kernel memory to user memory space\n");
-			// }
-			user_cmd->data = iter->kernel_addr;
-		}
-		//user_cmd->data = iter->kernel_addr;
-    return 0;
+								printk(KERN_ERR "Head %p\n", head);
+								if(iter->kernel_addr!=NULL)
+								{
+																// if (copy_to_user(user_cmd->data, iter->kernel_addr, ksize(iter->kernel_addr)) != 0)
+																// {
+																//  printk(KERN_ERR "Cannot copy content from kernel memory to user memory space\n");
+																// }
+																user_cmd->data = iter->kernel_addr;
+								}
+								//user_cmd->data = iter->kernel_addr;
+								return 0;
 }
 
 long npheap_unlock(struct npheap_cmd __user *user_cmd)
 {
-  struct linklist *iter = head;
-	int flag=0;
-	if(iter!=NULL)
-  {
-		while(iter->next!=NULL)
-  {
-    if(iter->offset == user_cmd->offset)
-    {
-      mutex_unlock(&(iter->lock));
-      user_cmd->op = 1;
-			flag=1;
-      break;
-    }
-    iter = iter -> next;
-  }
-	if(iter->offset == user_cmd->offset && !flag)
-	{
-		mutex_unlock(&(iter->lock));
-		user_cmd->op = 1;
-	}
-}
-    return 0;
+								struct linklist *iter = head;
+								int flag=0;
+								if(iter!=NULL)
+								{
+																while(iter->next!=NULL)
+																{
+																								if(iter->offset == user_cmd->offset)
+																								{
+																																mutex_unlock(&(iter->lock));
+																																user_cmd->op = 1;
+																																user_cmd->size = ksize(iter->kernel_addr);
+																																flag=1;
+																																break;
+																								}
+																								iter = iter->next;
+																}
+																if(iter->offset == user_cmd->offset && !flag)
+																{
+																								mutex_unlock(&(iter->lock));
+																								user_cmd->op = 1;
+																								user_cmd->size = ksize(iter->kernel_addr);
+																}
+								}
+								return 0;
 }
 
 long npheap_getsize(struct npheap_cmd __user *user_cmd)
 {
-    return user_cmd->size;
+								return user_cmd->size;
 }
+
 long npheap_delete(struct npheap_cmd __user *user_cmd)
 {
-	struct linklist *iter = head;
-	if (iter!=NULL)
-	{
-		while(iter->next!=NULL)
-	{
-		if(iter->offset == user_cmd->offset)
-		{
-			// Free the kernel memory and retain the linklist
-			kfree(iter->kernel_addr);
-			iter->kernel_addr=NULL;
-			break;
-		}
-		iter = iter -> next;
-	}
-}
-    return 0;
+								struct linklist *iter = head;
+								if (iter!=NULL)
+								{
+																while(iter->next!=NULL)
+																{
+																								if(iter->offset == user_cmd->offset)
+																								{
+																																// Free the kernel memory and retain the linklist
+																																kfree(iter->kernel_addr);
+																																iter->kernel_addr=NULL;
+																																break;
+																								}
+																								iter = iter->next;
+																}
+								}
+								return 0;
 }
 
 long npheap_ioctl(struct file *filp, unsigned int cmd,
-                                unsigned long arg)
+																		unsigned long arg)
 {
-    switch (cmd) {
-    case NPHEAP_IOCTL_LOCK:
-        return npheap_lock((void __user *) arg);
-    case NPHEAP_IOCTL_UNLOCK:
-        return npheap_unlock((void __user *) arg);
-    case NPHEAP_IOCTL_GETSIZE:
-        return npheap_getsize((void __user *) arg);
-    case NPHEAP_IOCTL_DELETE:
-        return npheap_delete((void __user *) arg);
-    default:
-        return -ENOTTY;
-    }
+								switch (cmd) {
+								case NPHEAP_IOCTL_LOCK:
+																return npheap_lock((void __user *) arg);
+								case NPHEAP_IOCTL_UNLOCK:
+																return npheap_unlock((void __user *) arg);
+								case NPHEAP_IOCTL_GETSIZE:
+																return npheap_getsize((void __user *) arg);
+								case NPHEAP_IOCTL_DELETE:
+																return npheap_delete((void __user *) arg);
+								default:
+																return -ENOTTY;
+								}
 }
