@@ -76,14 +76,15 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 																																printk(KERN_ERR "i AM IN IF while");
 																																if(iter->kernel_addr == NULL)
 																																{
-																																								printk(KERN_ERR "Allocated Memory\n");
+																																								printk(KERN_ERR "Allocating Memory %d\n", vma->vm_end - vma->vm_start);
+																																								//size_t size = 8192;
 																																								// Allocating Kernel Memory
-																																								void* kernel_memory = kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
+																																								void* kernel_memory = kmalloc(8192, GFP_KERNEL);
 																																								printk(KERN_ERR "Memory Allocated\n");
 																																								//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
 																																								//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
 																																								// Ref: https://sites.google.com/site/lbathen/research/mmap_driver
-																																								if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SHIFT, ksize(kernel_memory), vma->vm_page_prot) < 0)
+																																								if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SHIFT, vma->vm_end - vma->vm_start, vma->vm_page_prot) < 0)
 																																								{
 																																																printk(KERN_ERR "remap_pfn_range failed\n");
 																																																return -EIO;
@@ -99,8 +100,8 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 																																								printk(KERN_ERR "Size %d\n", ksize(kernel_memory));
 																																								return 0;
 																																}
-																																printk(KERN_ERR "Find mapping of size %lu\n", ksize(iter->kernel_addr));
-																																remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SHIFT, ksize(iter->kernel_addr), vma->vm_page_prot);
+																																printk(KERN_ERR "Find mapping of size in while %lu\n", ksize(iter->kernel_addr));
+																																remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SHIFT, vma->vm_end - vma->vm_start, vma->vm_page_prot);
 																																printk(KERN_ERR "Size %d\n", ksize(iter->kernel_addr));
 																																return 0;
 																								}
@@ -114,14 +115,15 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 																																printk(KERN_ERR "i AM IN IF while\n");
 																																if(iter->kernel_addr == NULL)
 																																{
-																																								printk(KERN_ERR "Allocated Memory\n");
+																																								printk(KERN_ERR "Allocating Memory %d\n", vma->vm_end - vma->vm_start);
+																																								//size_t size = 8192;
 																																								// Allocating Kernel Memory
-																																								void* kernel_memory = kmalloc(vma->vm_end - vma->vm_start, GFP_KERNEL);
+																																								void* kernel_memory = kmalloc(8192, GFP_KERNEL);
 																																								printk(KERN_ERR "Memory Allocated\n");
 																																								//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
 																																								//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
 																																								// Ref: https://sites.google.com/site/lbathen/research/mmap_driver
-																																								if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SHIFT, ksize(kernel_memory), vma->vm_page_prot) < 0)
+																																								if (remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)kernel_memory) >> PAGE_SHIFT, vma->vm_end - vma->vm_start, vma->vm_page_prot) < 0)
 																																								{
 																																																printk(KERN_ERR "remap_pfn_range failed\n");
 																																																return -EIO;
@@ -138,7 +140,7 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 																																								return 0;
 																																}
 																																printk(KERN_ERR "Find mapping of size %lu\n", ksize(iter->kernel_addr));
-																																remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SHIFT, ksize(iter->kernel_addr), vma->vm_page_prot);
+																																remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SHIFT, vma->vm_end - vma->vm_start, vma->vm_page_prot);
 																																printk(KERN_ERR "Size %d\n", ksize(iter->kernel_addr));
 																																return 0;
 																								}

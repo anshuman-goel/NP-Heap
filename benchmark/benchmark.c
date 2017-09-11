@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
         }
 //        memset(mapped_data, 0, 4096);
         a = rand()+1;
-        printf("Process %d of object %d has value of a %d", getpid(), i, a);
+        printf("Process %d of object %d has value of a %d\n", getpid(), i, a);
         gettimeofday(&current_time, NULL);
         for(j = 0; j < size-10; j=strlen(mapped_data))
         {
