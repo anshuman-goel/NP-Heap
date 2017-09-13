@@ -149,7 +149,12 @@ long npheap_unlock(struct npheap_cmd __user *user_cmd)
 																								{
 																																mutex_unlock(&(iter->lock));
 																																user_cmd->op = 1;
-																																user_cmd->size = ksize(iter->kernel_addr);
+																																printk(KERN_ERR "Delete ksize start\n");
+																																if (iter->kernel_addr != NULL)
+																																{
+																																								user_cmd->size = ksize(iter->kernel_addr);
+																																}
+																																printk(KERN_ERR "Delete ksize end\n");
 																																flag=1;
 																																break;
 																								}
@@ -159,7 +164,12 @@ long npheap_unlock(struct npheap_cmd __user *user_cmd)
 																{
 																								mutex_unlock(&(iter->lock));
 																								user_cmd->op = 1;
-																								user_cmd->size = ksize(iter->kernel_addr);
+																								printk(KERN_ERR "Delete ksize start\n");
+																								if (iter->kernel_addr != NULL)
+																								{
+																																user_cmd->size = ksize(iter->kernel_addr);
+																								}
+																								printk(KERN_ERR "Delete ksize end\n");																								
 																}
 								}
 								return 0;
@@ -173,6 +183,7 @@ long npheap_getsize(struct npheap_cmd __user *user_cmd)
 long npheap_delete(struct npheap_cmd __user *user_cmd)
 {
 								struct linklist *iter = head;
+								int flag = 0;
 								if (iter!=NULL)
 								{
 																while(iter->next!=NULL)
@@ -180,11 +191,23 @@ long npheap_delete(struct npheap_cmd __user *user_cmd)
 																								if(iter->offset == user_cmd->offset)
 																								{
 																																// Free the kernel memory and retain the linklist
+																																printk(KERN_ERR "Free up memory start\n");
 																																kfree(iter->kernel_addr);
+																																printk(KERN_ERR "Free up memory end\n");
 																																iter->kernel_addr=NULL;
+																																flag = 1;
 																																break;
 																								}
 																								iter = iter->next;
+																}
+																if(iter->offset == user_cmd->offset && !flag)
+																{
+																								// Free the kernel memory and retain the linklist
+																								printk(KERN_ERR "Free up memory start\n");
+																								kfree(iter->kernel_addr);
+																								printk(KERN_ERR "Free up memory end\n");
+																								iter->kernel_addr=NULL;
+																								flag = 1;
 																}
 								}
 								return 0;

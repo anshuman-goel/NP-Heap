@@ -10,7 +10,8 @@
 
 int main(int argc, char *argv[])
 {
-    int i=0,number_of_threads = 1, number_of_objects=1024; 
+    setbuf(stdout,NULL);
+    int i=0,number_of_threads = 1, number_of_objects=1024;
     int tid;
     __u64 size;
     __u64 object_id;
@@ -32,31 +33,38 @@ int main(int argc, char *argv[])
     }
     // Replay the log
     // Validate
+    printf("While start\n");
     while(scanf("%c %d %llu %llu %llu %s",&op, &tid, &current_time, &object_id, &size, &data[0])!=EOF)
     {
+        //printf
         if(op == 'S')
         {
             strcpy(obj[(int)object_id],data);
             memset(data,0,8192);
         } else if (op == 'G') {
-            if (strcmp(obj[(int)object_id], data)) {   
+            if (strcmp(obj[(int)object_id], data)) {
                 fprintf(stderr, "%d: Key %d has a wrong value %s v.s. %s\n",tid,(int)object_id,data,obj[(int)object_id]);
-                error++; 
+                error++;
             }
         }
         else if (op == 'D') {
+          printf("INside D\n");
             memset(obj[(int)object_id],0,8192);
+            printf("Object id %d %s\n", (int)object_id, obj[(int)object_id]);
         }
         if (error > 5) {
             break;
         }
     }
+    printf("OPening device\n" );
     devfd = open("/dev/npheap",O_RDWR);
     if(devfd < 0)
     {
         fprintf(stderr, "Device open failed");
         exit(1);
     }
+//    exit(1);
+    printf("I am accesing memory now\n");
     for(i = 0; i < number_of_objects; i++)
     {
         mapped_data = (char *)npheap_alloc(devfd,i,8192);
@@ -71,4 +79,3 @@ int main(int argc, char *argv[])
     close(devfd);
     return 0;
 }
-

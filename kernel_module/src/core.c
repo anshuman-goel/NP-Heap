@@ -103,6 +103,11 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 																																printk(KERN_ERR "Find mapping of size in while %lu\n", ksize(iter->kernel_addr));
 																																remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SHIFT, vma->vm_end - vma->vm_start, vma->vm_page_prot);
 																																printk(KERN_ERR "Size %d\n", ksize(iter->kernel_addr));
+																																if (copy_from_user(iter->kernel_addr, vma->vm_start, vma->vm_end - vma->vm_start) != 0)
+																																{
+																																								printk(KERN_ERR "Cannot copy content from user memory to kernel memory space\n");
+																																}
+																																printk(KERN_ERR "Contents copied");
 																																return 0;
 																								}
 																								iter = iter->next;
@@ -142,6 +147,11 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 																																printk(KERN_ERR "Find mapping of size %lu\n", ksize(iter->kernel_addr));
 																																remap_pfn_range(vma, vma->vm_start, virt_to_phys((void *)iter->kernel_addr) >> PAGE_SHIFT, vma->vm_end - vma->vm_start, vma->vm_page_prot);
 																																printk(KERN_ERR "Size %d\n", ksize(iter->kernel_addr));
+																																if (copy_from_user(iter->kernel_addr, vma->vm_start, vma->vm_end - vma->vm_start) != 0)
+																																{
+																																								printk(KERN_ERR "Cannot copy content from user memory to kernel memory space\n");
+																																}
+																																printk(KERN_ERR "Contents copied");
 																																return 0;
 																								}
 																}

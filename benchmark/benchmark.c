@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
         {
             size = rand()%(8192);
         }
-        while(size ==0);
+        while(size<=10);
         printf("Process %d of object %d has size %d\n", getpid(), i, size);
         mapped_data = (char *)npheap_alloc(devfd,i,size);
         if(!mapped_data)
@@ -70,18 +70,18 @@ int main(int argc, char *argv[])
         {
             sprintf(mapped_data,"%s%d",mapped_data,a);
         }
-        fprintf(fp,"S\t%d\t%ld\t%d\t%lu\t%s\n",pid,current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
+        fprintf(fp,"S\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
         npheap_unlock(devfd,i);
     }
-/*
+
     // try delete something
-    i = rand()%256;
-    npheap_lock(devfd,i);
-    npheap_delete(devfd,i);
-    fprintf(fp,"D\t%d\t%ld\t%d\t%lu\t%s\n",pid,current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
-    npheap_unlock(devfd,i);*/
-    close(devfd);
-    if(pid != 0)
-        wait(NULL);
+    // i = rand()%number_of_objects;
+    // npheap_lock(devfd,i);
+    // npheap_delete(devfd,i);
+    // fprintf(fp,"D\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
+    // npheap_unlock(devfd,i);
+    // close(devfd);
+    // if(pid != 0)
+    //     wait(NULL);
     return 0;
 }
