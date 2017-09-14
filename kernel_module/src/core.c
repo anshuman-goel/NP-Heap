@@ -80,6 +80,7 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 																																								//size_t size = 8192;
 																																								// Allocating Kernel Memory
 																																								void* kernel_memory = kmalloc(8192, GFP_KERNEL);
+																																								//kernel_memory[0]=0;
 																																								printk(KERN_ERR "Memory Allocated\n");
 																																								//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
 																																								//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
@@ -124,6 +125,7 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 																																								//size_t size = 8192;
 																																								// Allocating Kernel Memory
 																																								void* kernel_memory = kmalloc(8192, GFP_KERNEL);
+																																								//kernel_memory[0]=0;
 																																								printk(KERN_ERR "Memory Allocated\n");
 																																								//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
 																																								//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);

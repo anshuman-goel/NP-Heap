@@ -102,6 +102,7 @@ long npheap_lock(struct npheap_cmd __user *user_cmd)
 																temp->offset = user_cmd->offset;
 																temp->next = NULL;
 																temp->kernel_addr = NULL;
+																user_cmd->size = 0;
 																mutex_init(&(temp->lock));
 																if(head == NULL)
 																{
@@ -169,7 +170,7 @@ long npheap_unlock(struct npheap_cmd __user *user_cmd)
 																								{
 																																user_cmd->size = ksize(iter->kernel_addr);
 																								}
-																								printk(KERN_ERR "Delete ksize end\n");																								
+																								printk(KERN_ERR "Delete ksize end\n");
 																}
 								}
 								return 0;
@@ -195,6 +196,7 @@ long npheap_delete(struct npheap_cmd __user *user_cmd)
 																																kfree(iter->kernel_addr);
 																																printk(KERN_ERR "Free up memory end\n");
 																																iter->kernel_addr=NULL;
+																																user_cmd->size = 0;
 																																flag = 1;
 																																break;
 																								}
@@ -207,6 +209,7 @@ long npheap_delete(struct npheap_cmd __user *user_cmd)
 																								kfree(iter->kernel_addr);
 																								printk(KERN_ERR "Free up memory end\n");
 																								iter->kernel_addr=NULL;
+																								user_cmd->size = 0;
 																								flag = 1;
 																}
 								}
