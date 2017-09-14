@@ -135,15 +135,15 @@ int main(int argc, char *argv[])
 
         gettimeofday(&current_time, NULL);
 
-        printf("STring1 length for pid %d is %d\n", getpid(), strlen(mapped_data));
-        for(j=0; j < size-10; j=strlen(mapped_data))
+        printf("String1 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
+        for(j=strlen(mapped_data); j < size-10; j=strlen(mapped_data))
 
         {
 
             sprintf(mapped_data,"%s%d",mapped_data,a);
 
         }
-        printf("STring2 length for pid %d is %d\n", getpid(), strlen(mapped_data));
+        printf("String2 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
         fprintf(fp,"S\t%d\t%ld\t%d\t%lu\t%s\n",pid,current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
 
         npheap_unlock(devfd,i);

@@ -143,6 +143,7 @@ int main(int argc, char *argv[])
     {
 
         size = npheap_getsize(devfd,i);
+        printf("The size for object %d is %d \n", i, size);
          if(size!=0)
         mapped_data = (char *)npheap_alloc(devfd,i,npheap_getsize(devfd, i));
         else

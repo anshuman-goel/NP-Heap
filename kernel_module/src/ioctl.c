@@ -154,6 +154,7 @@ long npheap_unlock(struct npheap_cmd __user *user_cmd)
 																																if (iter->kernel_addr != NULL)
 																																{
 																																								user_cmd->size = ksize(iter->kernel_addr);
+																																								printk(KERN_ERR "User cmd size %d\n", user_cmd->size);
 																																}
 																																printk(KERN_ERR "Delete ksize end\n");
 																																flag=1;
@@ -169,6 +170,7 @@ long npheap_unlock(struct npheap_cmd __user *user_cmd)
 																								if (iter->kernel_addr != NULL)
 																								{
 																																user_cmd->size = ksize(iter->kernel_addr);
+																																printk(KERN_ERR "User cmd size %d\n", user_cmd->size);
 																								}
 																								printk(KERN_ERR "Delete ksize end\n");
 																}
@@ -178,7 +180,9 @@ long npheap_unlock(struct npheap_cmd __user *user_cmd)
 
 long npheap_getsize(struct npheap_cmd __user *user_cmd)
 {
-								return user_cmd->size;
+			printk(KERN_ERR "Get size %d", user_cmd->size);
+								//return user_cmd->size;
+								return 8192;
 }
 
 long npheap_delete(struct npheap_cmd __user *user_cmd)
