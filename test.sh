@@ -6,6 +6,6 @@ rm -f *trace*
 sleep 5
 cat *.log > trace
 sort -n -k3 trace > sorted_trace
-./benchmark/validate 4 8192 < sorted_trace
+./benchmark/validate 4 8192
 # rm -f *.log
 sudo rmmod npheap
