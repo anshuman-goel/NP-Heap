@@ -26,6 +26,9 @@ int main(int argc, char *argv[])
 
     int i=0,number_of_threads = 1, number_of_objects=1024 , max_size_of_objects=8192;
 
+    char buffer[10000];
+    FILE *fp;
+
     int tid;
 
     long size;
@@ -74,13 +77,26 @@ int main(int argc, char *argv[])
 
     // Validate
 
-    printf("While start\n");
+    // printf("While start\n");
 
-    while(scanf("%c %d %llu %llu %llu %s",&op, &tid, &current_time, &object_id, &size, &data[0])!=EOF)
+    fp = fopen("sorted_trace","r");
 
+    // while(scanf("%c %d %llu %llu %llu %s",&op, &tid, &current_time, &object_id, &size, &data[0])!=EOF)
+    while(fgets(&buffer[0],10000,fp)!=NULL)
     {
+        int length = strlen(buffer);
+        // printf("Length : %d Char : '%c' Char : '%c' \n",length,buffer[length-1],buffer[length-2]);
+        // printf("String : %s\n",buffer);
+        if (buffer[length-2]=='\t') {
+            // printf("NULL VALUE \n");
+            sscanf(&buffer[0],"%c %d %llu %llu %llu",&op, &tid, &current_time, &object_id, &size);
+            data[0] = '\0';
+        } else {
+            // printf("REGULAR \n");
+            sscanf(&buffer[0],"%c %d %llu %llu %llu %s",&op, &tid, &current_time, &object_id, &size, &data[0]);
+        }
 
-        printf("In while\n");
+        // printf("%c,%d,%s \n",op,tid,data);
 
         if(op == 'S')
 
@@ -95,7 +111,7 @@ int main(int argc, char *argv[])
             if (strcmp(obj[(int)object_id], data)) {
 
                 fprintf(stderr, "%d: Key %d has a wrong value %s v.s. %s\n",tid,(int)object_id,data,obj[(int)object_id]);
-
+                fprintf(stderr,"Length(data) %d : Length (reference) %d \n",strlen(data),strlen(obj[(int)object_id]));
                 error++;
 
             }
@@ -104,11 +120,11 @@ int main(int argc, char *argv[])
 
         else if (op == 'D') {
 
-          printf("INside D\n");
+          // printf("INside D\n");
 
             memset(obj[(int)object_id],0,max_size_of_objects);
 
-            printf("Object id %d %s\n", (int)object_id, obj[(int)object_id]);
+            // printf("Object id %d %s\n", (int)object_id, obj[(int)object_id]);
 
         }
 
@@ -120,7 +136,7 @@ int main(int argc, char *argv[])
 
     }
 
-    printf("OPening device\n" );
+    // printf("OPening device\n" );
 
     devfd = open("/dev/npheap",O_RDWR);
 
@@ -136,14 +152,14 @@ int main(int argc, char *argv[])
 
 //    exit(1);
 
-    printf("I am accesing memory now\n");
+    // printf("I am accesing memory now\n");
 
     for(i = 0; i < number_of_objects; i++)
 
     {
 
         size = npheap_getsize(devfd,i);
-        printf("The size for object %d is %d \n", i, size);
+        // printf("The size for object %d is %d \n", i, size);
          if(size!=0)
         mapped_data = (char *)npheap_alloc(devfd,i,npheap_getsize(devfd, i));
         else
@@ -154,6 +170,7 @@ int main(int argc, char *argv[])
         {
 
             fprintf(stderr, "Object %d has a wrong value %s v.s. %s\n",i,mapped_data,obj[i]);
+            fprintf(stderr,"Length(data) %d : Length (reference) %d \n",strlen(mapped_data),strlen(obj[(int)object_id]));
 
             error++;
 

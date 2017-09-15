@@ -80,18 +80,18 @@ int main(int argc, char *argv[])
 
     // Writing to objects
 
-    printf("Pid for parent %d\n", pid);
+    // printf("Pid for parent %d\n", pid);
     for(i=0;i<(number_of_processes-1) && pid != 0;i++)
 
     {
 
         pid=fork();
 
-        printf("%d\n", pid);
+        // printf("%d\n", pid);
 
     }
 
-    printf("Creating file\n");
+    // printf("Creating file\n");
 
     sprintf(filename,"npheap.%d.log",(int)getpid());
 
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 
         while(size ==0 || size <= 10);
 
-        printf("Process %d of object %d has size %d\n", getpid(), i, size);
+        // printf("Process %d of object %d has size %d\n", getpid(), i, size);
 
         mapped_data = (char *)npheap_alloc(devfd,i,size);
 
@@ -131,11 +131,11 @@ int main(int argc, char *argv[])
 
         a = rand()+1;
 
-        printf("Process %d of object %d has value of a %d\n", getpid(), i, a);
+        // printf("Process %d of object %d has value of a %d\n", getpid(), i, a);
 
         gettimeofday(&current_time, NULL);
 
-        printf("String1 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
+        // printf("String1 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
         for(j=strlen(mapped_data); j < size-10; j=strlen(mapped_data))
 
         {
@@ -143,41 +143,45 @@ int main(int argc, char *argv[])
             sprintf(mapped_data,"%s%d",mapped_data,a);
 
         }
-        printf("String2 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
+        // printf("String2 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
         fprintf(fp,"S\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
 
         npheap_unlock(devfd,i);
 
+        // With 50 % probability, select another random offset created so far, and call getsize or delete
+        
+        if (rand()%2==0) {
+            // try get size 
+            j = rand()%(i+1);
+
+            npheap_lock(devfd,j);
+
+            gettimeofday(&current_time, NULL);
+            mapped_data = (char *)npheap_alloc(devfd,j,npheap_getsize(devfd, i));
+
+            // printf("G\t%d\t%d\t%d\t%s\n",j,npheap_getsize(devfd, i),strlen(mapped_data),mapped_data);
+            fprintf(fp,"G\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,j,strlen(mapped_data),mapped_data);
+
+            npheap_unlock(devfd,j);
+        }
+
+
+        if (rand()%2==0) {
+            // try delete something
+
+            j = rand()%(i+1);
+            
+            npheap_lock(devfd,j);
+            
+            gettimeofday(&current_time, NULL);
+            npheap_delete(devfd,j);
+            
+            fprintf(fp,"D\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,j,strlen(mapped_data),mapped_data);
+            
+            npheap_unlock(devfd,j);
+        }
+
     }
-
-
-    // try get size 
-    i = rand()%number_of_objects;
-
-    npheap_lock(devfd,i);
-
-    gettimeofday(&current_time, NULL);
-    mapped_data = (char *)npheap_alloc(devfd,i,npheap_getsize(devfd, i));
-
-    printf("G\t%d\t%d\t%d\t%s\n",i,npheap_getsize(devfd, i),strlen(mapped_data),mapped_data);
-    fprintf(fp,"G\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
-
-    npheap_unlock(devfd,i);
-
-
-
-    // try delete something
-
-    // i = rand()%number_of_objects;
-    
-    npheap_lock(devfd,i);
-    
-    gettimeofday(&current_time, NULL);
-    npheap_delete(devfd,i);
-    
-    fprintf(fp,"D\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
-    
-    npheap_unlock(devfd,i);
 
     close(devfd);
 
