@@ -144,27 +144,42 @@ int main(int argc, char *argv[])
 
         }
         printf("String2 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
-        fprintf(fp,"S\t%d\t%ld\t%d\t%lu\t%s\n",pid,current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
+        fprintf(fp,"S\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
 
         npheap_unlock(devfd,i);
 
     }
 
 
+    // try get size 
+    i = rand()%number_of_objects;
+
+    npheap_lock(devfd,i);
+
+    gettimeofday(&current_time, NULL);
+    mapped_data = (char *)npheap_alloc(devfd,i,npheap_getsize(devfd, i));
+
+    printf("G\t%d\t%d\t%d\t%s\n",i,npheap_getsize(devfd, i),strlen(mapped_data),mapped_data);
+    fprintf(fp,"G\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
+
+    npheap_unlock(devfd,i);
+
+
 
     // try delete something
 
     // i = rand()%number_of_objects;
-    //
-    // npheap_lock(devfd,i);
-    //
-    // npheap_delete(devfd,i);
-    //
-    // fprintf(fp,"D\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
-    //
-    // npheap_unlock(devfd,i);
+    
+    npheap_lock(devfd,i);
+    
+    gettimeofday(&current_time, NULL);
+    npheap_delete(devfd,i);
+    
+    fprintf(fp,"D\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
+    
+    npheap_unlock(devfd,i);
 
-     close(devfd);
+    close(devfd);
 
     if(pid != 0)
 
