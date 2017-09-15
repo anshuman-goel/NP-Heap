@@ -53,6 +53,7 @@ extern struct miscdevice npheap_dev;
 extern struct linklist
 {
 								unsigned long offset;
+								int size;
 								void* kernel_addr;
 								struct linklist *next;
 								struct mutex lock;
@@ -81,6 +82,7 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 																																								// Allocating Kernel Memory
 																																								void* kernel_memory = kzalloc(8192, GFP_KERNEL);
 																																								//kernel_memory[0]=0;
+																																								iter->size = vma->vm_end - vma->vm_start;
 																																								printk(KERN_ERR "Memory Allocated\n");
 																																								//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
 																																								//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);
@@ -126,6 +128,7 @@ int npheap_mmap(struct file *filp, struct vm_area_struct *vma)
 																																								// Allocating Kernel Memory
 																																								void* kernel_memory = kzalloc(8192, GFP_KERNEL);
 																																								//kernel_memory[0]=0;
+																																								iter->size = vma->vm_end - vma->vm_start;
 																																								printk(KERN_ERR "Memory Allocated\n");
 																																								//Creating a mapping from Userspace Virtual Memory to Kernel Logical Memory
 																																								//remap_pfn_range(vma, virt_to_phys((void*)((unsigned long)kernel_memory)), vma->vm_pgoff, ksize(kernel_memory), vma->vm_page_prot);

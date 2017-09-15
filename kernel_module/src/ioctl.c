@@ -51,6 +51,7 @@ struct mutex global_lock;
 struct linklist
 {
 								unsigned long offset;
+								int size;
 								void* kernel_addr;
 								struct linklist *next;
 								struct mutex lock;
@@ -180,9 +181,22 @@ long npheap_unlock(struct npheap_cmd __user *user_cmd)
 
 long npheap_getsize(struct npheap_cmd __user *user_cmd)
 {
-			printk(KERN_ERR "Get size %d", user_cmd->size);
-								//return user_cmd->size;
-								return 8192;
+			struct linklist *iter = head;
+			int size;
+			printk(KERN_ERR "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+			while(iter!=NULL)
+			{
+				if(iter->offset == user_cmd->offset)
+				{
+					printk(KERN_ERR "The getsize returns: %d \n",iter->size);
+					size = iter->size;
+				}
+				
+					iter = iter->next;
+			}
+
+			return size;
+
 }
 
 long npheap_delete(struct npheap_cmd __user *user_cmd)
