@@ -134,8 +134,8 @@ int main(int argc, char *argv[])
         // printf("Process %d of object %d has value of a %d\n", getpid(), i, a);
 
         gettimeofday(&current_time, NULL);
-
-        // printf("String1 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
+        //printf("Size is: %d", size);
+        //printf("String1 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
         for(j=strlen(mapped_data); j < size-10; j=strlen(mapped_data))
 
         {
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
             sprintf(mapped_data,"%s%d",mapped_data,a);
 
         }
-        // printf("String2 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
+        //printf("String2 length for pid %d for object %d is %d\n", getpid(), i, strlen(mapped_data));
         fprintf(fp,"S\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,i,strlen(mapped_data),mapped_data);
 
         npheap_unlock(devfd,i);
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
             npheap_lock(devfd,j);
 
             gettimeofday(&current_time, NULL);
-            mapped_data = (char *)npheap_alloc(devfd,j,npheap_getsize(devfd, i));
+            mapped_data = (char *)npheap_alloc(devfd,j,npheap_getsize(devfd, j));
 
             // printf("G\t%d\t%d\t%d\t%s\n",j,npheap_getsize(devfd, i),strlen(mapped_data),mapped_data);
             fprintf(fp,"G\t%d\t%ld\t%d\t%lu\t%s\n",getpid(),current_time.tv_sec * 1000000 + current_time.tv_usec,j,strlen(mapped_data),mapped_data);
