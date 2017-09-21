@@ -49,6 +49,11 @@
 
 struct mutex global_lock;
 
+// Linked list structure - they store 
+// the offset value, 
+// size of memory allocation, 
+// the kernel address location (could be NULL if not initialized)
+// mutex lock object 
 struct linklist
 {
 	unsigned long offset;
@@ -58,7 +63,7 @@ struct linklist
 	struct mutex lock;
 } *head=NULL;
 
-// If exist, return the data.
+
 long npheap_lock(struct npheap_cmd __user *user_cmd)
 {
 	// Check if offset exists in linked list
@@ -73,21 +78,17 @@ long npheap_lock(struct npheap_cmd __user *user_cmd)
 	// If the linked list is empty, create global lock and continue.
 	if(head==NULL)
 	{
-		printk(KERN_ERR "Head %p\n", head);
 
-		//global_lock =(struct mutex *) kmalloc(sizeof(struct mutex), GFP_KERNEL);
 		mutex_init(&global_lock);
-		printk(KERN_ERR "Acquiring global lock\n");
 	}
+
 	// Acquire global lock
 	mutex_lock(&global_lock);
-	printk(KERN_ERR "Start IF\n");
-	printk(KERN_ERR "USER OFFSET %lu\n", user_cmd->offset);
-	// Iterate and check for the offset
+
+	// Iterate through the linked list and check for the offset
 	if (iter!=NULL)
 	{
-		printk(KERN_ERR "Start ieration \n");
-		while(iter->next!=NULL) //!iter
+		while(iter->next!=NULL) 
 		{
 			if(iter->offset == user_cmd->offset)
 			{
@@ -101,17 +102,19 @@ long npheap_lock(struct npheap_cmd __user *user_cmd)
 			flag = 1;
 		}
 	}
-	printk(KERN_ERR "Finished iterating with flag %d\n", flag);
 
-	// create new structure linklist and add it
+	// If the offset was not found, create a new node
 	if(!flag)
 	{
+		// Create new node and assign memory
 		struct linklist *temp;
 		temp = kmalloc(sizeof(struct linklist), GFP_KERNEL);
 		temp->offset = user_cmd->offset;
 		temp->next = NULL;
 		temp->kernel_addr = NULL;
 		user_cmd->size = 0;
+
+		// Create mutex object for the offset
 		mutex_init(&(temp->lock));
 		if(head == NULL)
 		{
@@ -119,69 +122,63 @@ long npheap_lock(struct npheap_cmd __user *user_cmd)
 		}
 		else
 		{
-
 			iter->next = temp;
 		}
 		iter = temp;
 
-		printk(KERN_ERR "CReated node\n");
 	}
-	printk(KERN_ERR "REleasing global lock");
+
+	// Unlock the global lock, once we're done updating the linked list
 	mutex_unlock(&global_lock);
 
 	// acquire lock on the offset on linklist
-	printk(KERN_ERR "Acquiring local lock\n");
 	mutex_lock(&(iter->lock));
 	user_cmd->op = 0;
 
-	printk(KERN_ERR "Head %p\n", head);
+	// Finally, assign the data to user_cmd object
 	if(iter->kernel_addr!=NULL)
 	{
-		// if (copy_to_user(user_cmd->data, iter->kernel_addr, ksize(iter->kernel_addr)) != 0)
-		// {
-		//  printk(KERN_ERR "Cannot copy content from kernel memory to user memory space\n");
-		// }
 		user_cmd->data = iter->kernel_addr;
 	}
-	//user_cmd->data = iter->kernel_addr;
 	return 0;
 }
 
 long npheap_unlock(struct npheap_cmd __user *user_cmd)
 {
+	// Get the linked list object
 	struct linklist *iter = head;
 	int flag=0;
+
+	// Iterate through the linked list to find the offset
 	if(iter!=NULL)
 	{
 		while(iter->next!=NULL)
 		{
+			// If the offset is found, unlock it, and assign the data to user_cmd object
 			if(iter->offset == user_cmd->offset)
 			{
 				mutex_unlock(&(iter->lock));
 				user_cmd->op = 1;
-				printk(KERN_ERR "Delete ksize start\n");
 				if (iter->kernel_addr != NULL)
 				{
 					user_cmd->size = ksize(iter->kernel_addr);
-					printk(KERN_ERR "User cmd size %d\n", user_cmd->size);
 				}
-				printk(KERN_ERR "Delete ksize end\n");
 				flag=1;
 				break;
 			}
 			iter = iter->next;
 		}
+
+		// The last loop only checks till the second last element
+		// Check on the last element
 		if(iter->offset == user_cmd->offset && !flag)
 		{
 			mutex_unlock(&(iter->lock));
 			user_cmd->op = 1;
-			printk(KERN_ERR "Delete ksize start\n");
 			if (iter->kernel_addr != NULL)
 			{
 				user_cmd->size = ksize(iter->kernel_addr);
-				printk(KERN_ERR "User cmd size %d\n", user_cmd->size);
 			}
-			printk(KERN_ERR "Delete ksize end\n");
 		}
 	}
 	return 0;
@@ -189,13 +186,14 @@ long npheap_unlock(struct npheap_cmd __user *user_cmd)
 
 long npheap_getsize(struct npheap_cmd __user *user_cmd)
 {
+	// The size is already stored in the linked list object during mmap function
+	// Iterate through the linked list, find it, and return it
 	struct linklist *iter = head;
 	int size;
 	while(iter!=NULL)
 	{
 		if(iter->offset == user_cmd->offset)
 		{
-			printk(KERN_ERR "The getsize returns: %d \n",iter->size);
 			size = iter->size;
 		}
 
@@ -208,6 +206,9 @@ long npheap_getsize(struct npheap_cmd __user *user_cmd)
 
 long npheap_delete(struct npheap_cmd __user *user_cmd)
 {
+	// To delete, just unlink the linked list node, and free the allotted kernel memory space
+	// Also so kernel address as NULL in the linked list element
+
 	struct linklist *iter = head;
 	int flag = 0;
 	if (iter!=NULL)
@@ -217,9 +218,9 @@ long npheap_delete(struct npheap_cmd __user *user_cmd)
 			if(iter->offset == user_cmd->offset)
 			{
 				// Free the kernel memory and retain the linklist
-				printk(KERN_ERR "Free up memory start\n");
 				kfree(iter->kernel_addr);
-				printk(KERN_ERR "Free up memory end\n");
+				// Set kernel address as NULL
+				// This allocates memory again, if the offset is requested again
 				iter->kernel_addr=NULL;
 				user_cmd->size = 0;
 				flag = 1;
@@ -230,9 +231,9 @@ long npheap_delete(struct npheap_cmd __user *user_cmd)
 		if(iter->offset == user_cmd->offset && !flag)
 		{
 			// Free the kernel memory and retain the linklist
-			printk(KERN_ERR "Free up memory start\n");
 			kfree(iter->kernel_addr);
-			printk(KERN_ERR "Free up memory end\n");
+			// Set kernel address as NULL
+			// This allocates memory again, if the offset is requested again
 			iter->kernel_addr=NULL;
 			user_cmd->size = 0;
 			flag = 1;
