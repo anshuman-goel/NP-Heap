@@ -228,6 +228,7 @@ long npheap_delete(struct npheap_cmd __user *user_cmd)
 				// Set kernel address as NULL
 				// This allocates memory again, if the offset is requested again
 				iter->kernel_addr=NULL;
+				iter->size = 0;
 				user_cmd->size = 0;
 				flag = 1;
 				break;
@@ -242,6 +243,7 @@ long npheap_delete(struct npheap_cmd __user *user_cmd)
 			// This allocates memory again, if the offset is requested again
 			iter->kernel_addr=NULL;
 			user_cmd->size = 0;
+			iter->size = 0;
 			flag = 1;
 		}
 	}

@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
         
         if (rand()%2==0) {
             // try get size 
-            j = rand()%(i+1);
+            j = rand()%(number_of_objects);
 
             npheap_lock(devfd,j);
 
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
         if (rand()%2==0) {
             // try delete something
 
-            j = rand()%(i+1);
+            j = rand()%(number_of_objects);
             
             npheap_lock(devfd,j);
             
