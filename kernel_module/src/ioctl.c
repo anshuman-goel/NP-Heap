@@ -111,6 +111,7 @@ long npheap_lock(struct npheap_cmd __user *user_cmd)
 		temp = kmalloc(sizeof(struct linklist), GFP_KERNEL);
 		temp->offset = user_cmd->offset;
 		temp->next = NULL;
+		temp->size = 0;
 		temp->kernel_addr = NULL;
 		user_cmd->size = 0;
 

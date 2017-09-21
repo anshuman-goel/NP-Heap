@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 
         npheap_lock(devfd,i);
         size = npheap_getsize(devfd,i);
-        printf("size is %d",size);
+       
         
         while(size ==0 || size <= 10)
         {
