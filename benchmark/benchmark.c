@@ -102,16 +102,17 @@ int main(int argc, char *argv[])
     {
 
         npheap_lock(devfd,i);
-
-        do
-
+        size = npheap_getsize(devfd,i);
+        printf("size is %d",size);
+        
+        while(size ==0 || size <= 10)
         {
 
             size = rand()%(max_size_of_objects);
 
         }
 
-        while(size ==0 || size <= 10);
+        
 
         // printf("Process %d of object %d has size %d\n", getpid(), i, size);
 

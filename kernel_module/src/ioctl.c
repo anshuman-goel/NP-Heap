@@ -189,18 +189,23 @@ long npheap_getsize(struct npheap_cmd __user *user_cmd)
 	// The size is already stored in the linked list object during mmap function
 	// Iterate through the linked list, find it, and return it
 	struct linklist *iter = head;
-	int size;
+	long size = 0;
+	user_cmd ->size =0;
 	while(iter!=NULL)
 	{
 		if(iter->offset == user_cmd->offset)
 		{
 			size = iter->size;
+			user_cmd->size = size;
+			return size;
 		}
 
 		iter = iter->next;
+		
+
 	}
 
-	return size;
+	return 0;
 
 }
 
